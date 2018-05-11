@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# We need a list of the SMART-enabled drives on the system. Choose one of these
+# three methods to provide the list. Comment out the two unused sections of code.
+
+# 1. A string constant; just key in the devices you want to report on here:
+#drives="da1 da2 da3 da4 da5 da6 da7 da8 ada0"
+
+# 2. A systcl-based technique suggested on the FreeNAS forum:
+#drives=$(for drive in $(sysctl -n kern.disks); do \
+#if [ "$("${smartctl}" -i /dev/${drive} | grep "SMART support is: Enabled" | awk '{print $3}')" ]
+#then printf ${drive}" "; fi done | awk '{for (i=NF; i!=0 ; i--) print $i }')
+
+# 3. A smartctl-based function:
+{    
+        
+gs_smartdrives=""    
+        
+gs_drives=$("$smartctl" --scan | awk '{print $1}')    
+        
+for gs_drive in $gs_drives; do    
+        
+    gs_smart_flag=$("$smartctl" -i "$gs_drive" | grep "SMART support is: Enabled" | awk '{print $4}')    
+        
+    if [ "$gs_smart_flag" = "Enabled" ]; then    
+        
+     gs_smartdrives="$gs_smartdrives $gs_drive"    
+        
+    fi    
+        
+done    
+        
+echo "$gs_smartdrives"    
+        
+}    
+        
+drives=$(get_smart_drives)                
+
+#############################
+# CPU temperatures:
+#############################
+
+(
+if [ "$use_ipmi" -eq 0 ]; then
+  cpucores=$(sysctl -n hw.ncpu)
+  echo '=== CPU (%s) ===\n' "$cpucores"
+  cpucores=$((cpucores - 1))
+  for core in $(seq 0 $cpucores); do
+    temp=$(sysctl -n dev.cpu."$core".temperature|sed/g')
+    if [ "$temp" -lt 0 ]; then
+      temp="--n/a--"
+    else
+      temp="${temp}C"
+    fi
+    printf 'CPU %2.2s: %5s\n' "$core" "$temp"
+  done
+  echo ""
+else
+  cpucores=$("$ipmitool" -I lanplus -H "$ipmihost" -U "$ipmiuser" -f "$ipmipwfile" sdr elist all | grep -c -i "cpu.*temp")
+ 
+  echo '=== CPU (%s) ===\n' "$cpucores"
+  if [ "$cpucores" -eq 1 ]; then
+    temp=$("$ipmitool" -I lanplus -H "$ipmihost" -U "$ipmiuser" -f "$ipmipwfile" sdr elist all | grep "CPU Temp" | awk '{print $10}')
+    if [ "$temp" -lt 0 ]; then
+       temp="-n/a-"
+    else
+       temp="${temp}C"
+    fi
+    printf 'CPU %2s: %5s\n' "$core" "$temp"
+  else
+    for core in $(seq 1 "$cpucores"); do
+      temp=$("$ipmitool" -I lanplus -H "$ipmihost" -U "$ipmiuser" -f "$ipmipwfile" sdr elist all | grep "CPU${core} Temp" | awk '{print $10}')
+      if [ "$temp" -lt 0 ]; then
+         temp="-n/a-"
+       else
+         temp="${temp}C"
+      fi
+      printf 'CPU %2s: [%s]\n' "$core" "$temp"
+    done
+  fi
+fi) >> ${logfile}
+
+#############################
+# Drive temperatures:
+#############################
+echo "" >> ${logfile}
+echo "=== DRIVES ===" >> ${logfile}
+
+for drive in $drives; do (
+  serial=$("$smartctl" -i "$drive" | grep "Serial Number" | awk '{print $3}')
+  capacity=$("$smartctl" -i "$drive" | grep "User Capacity" | awk '{print $5 $6}')
+  temp=$("$smartctl" -A "$drive" | grep "194 Temperature" | awk '{print $10}')
+  if [ -z "$temp" ]; then
+    temp=$("$smartctl" -A "$drive" | grep "190 Airflow_Temperature" | awk '{print $10}')
+  fi
+  if [ -z "$temp" ]; then
+    temp="-n/a-"
+  else
+    temp="${temp}C"
+  fi
+  dfamily=$("$smartctl" -i "$drive" | grep "Model Family" | awk '{print $3, $4, $5, $6, $7}' | sed -e 's/[[:space:]]*$//')
+  dmodel=$("$smartctl" -i "$drive" | grep "Device Model" | awk '{print $3, $4, $5, $6, $7}' | sed -e 's/[[:space:]]*$//')
+  if [ -z "$dfamily" ]; then
+    dinfo="$dmodel"
+  else
+    dinfo="$dfamily ($dmodel)"
+  fi
+  printf '%6.6s: %5s %-8s %-20.20s %s\n' "$(basename "$drive")" "$temp" "$capacity" "$serial" "$dinfo"
+) >> ${logfile}
+done

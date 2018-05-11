@@ -1,0 +1,96 @@
+/*package collector
+
+import (
+	"io/ioutil" //for reading the password for IPMI
+	"os/exec"   //for using external processes - IPMI and smartctl calls
+	"strconv"   //used in the conversion of an in to a string in the final function which pushes the data to be a metric
+
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+//--------------------------------
+// *** CPU Temperatures ***
+//--------------------------------
+
+//a struct (like a multi field object) for the CPUs, leaves room for more later
+type cpu struct {
+	temp int
+}
+
+//generic error checker
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+//get the # of CPU cores and their temperatures and put them in a cpu struct, then return a slice of these structs
+func getCPUtemps() (out []cpu) {
+
+	// IPMI Variables/Settings
+	//useIPMI := true //I want to use IPMI, use what you like
+	ipmiHost := "IPMI ADDRESS"  // IP address or DNS-resolvable hostname of IPMI server:
+	ipmiUser := "IPMI Username" // IPMI username
+	// IPMI password file. This is a file containing the IPMI user's password
+	// on a single line and should have 0600 permissions:
+	ipmiPW, err := ioutil.ReadFile("/root/ipmi_password") //needs to find the file at location and read the line to the variable
+	check(err)                                            //calls a generic error checker
+
+	out = make([]cpu)
+
+	//define the command to get the number of CPUs and then use it
+	numCpuCmd := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmipw, " sdr elist all | grep -c -i 'cpu.*temp")
+	numCpuSoB, _ := numCpuCmd.Output() //returns a slice of bytes and an error
+	numCpu = int(numCpuSoB[0])         //converts the first and hopefully only value of slice of bytes into an int
+
+	//go through each CPU and get the temperature
+	if numCPU == 1 {
+		//define the command used to get the CPU temperature
+		cpuTemp := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmipw, " sdr elist all | grep 'CPU Temp' | awk '{print $10}'")
+		temp, _ := cpuTemp.Output()
+		out = append(cpu, int(temp))
+	} else {
+		for i = 0; i < numCPU; i++ {
+			cpuTemp := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmipw, " sdr elist all | grep 'CPU", string(i), " Temp' | awk '{print $10}'")
+			temp, _ := cpuTemp.Output()
+			out = append(cpu, int(temp))
+		}
+	}
+	return out // returns the slice of cpu structs
+}
+
+//Beginning of the Go section that I believe is required for the collector to run
+
+func init() {
+	//registers the collector with collector.go to be started/fetched with each update
+	registerCollector("freenas", defaultEnabled, NewStatCollector)
+}
+
+// NewStatCollector returns a new Collector exposing CPU stats.
+func NewStatCollector() (Collector, error) {
+
+	//returns the struct with data
+	return &cpu{
+		temp: typedDesc{
+			prometheus.NewDesc( //github.com\Prometheus\client_golang\prometheus\desc.go
+				prometheus.BuildFQName(namespace, cpuCollectorSubsystem, "temperature_celsius"), //builds the FQDN" node_cpu_temperature_celsius".  I may need to adjust the namespace
+				"CPU temperature",
+				[]string{"freenas"}, nil,
+			), prometheus.GaugeValue},
+	}, nil
+}
+
+// Expose CPU stats using sysctl.
+func (c *statCollector) Update(ch chan<- prometheus.Metric) error {
+
+	//if err != nil {
+	//	return err
+	//}
+	for i := range getCPUTemps() {
+		lcpu := strconv.Itoa(i)
+		ch <- c.temp.mustNewConstMetric(float64(temp), lcpu)
+	}
+	return err
+}
+*/
