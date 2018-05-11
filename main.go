@@ -10,10 +10,10 @@ import (
 
 func main() {
 
-	//Create a new instance of the foocollector and
+	//Create a new instance of the tempCollector and
 	//register it with the prometheus client.
-	foo := newFooCollector()
-	prometheus.MustRegister(foo)
+	temp := newCPUCollector()
+	prometheus.MustRegister(temp)
 
 	//This section will start the HTTP server and expose
 	//any metrics on the /metrics endpoint.
