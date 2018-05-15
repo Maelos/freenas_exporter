@@ -9,6 +9,4 @@ This will be the base code.  Once I get this working I hope to add in temp metri
 Status: Compiles, I believe with dependencies, but does not run as descriped in the google groups thread.  Not sure what is missing, but I will keep playing around with it.
 
 Credit for much of the work goes to:
-https://rsmitty.github.io/Prometheus-Exporters/
-https://www.robustperception.io/setting-a-prometheus-counter/
-and looking at the node_xporter of Prometheus, specifically cpu_freebsd
+https://rsmitty.github.io/Prometheus-Exporters/, https://www.robustperception.io/setting-a-prometheus-counter/, and looking at the node_xporter of Prometheus, specifically cpu_freebsd
