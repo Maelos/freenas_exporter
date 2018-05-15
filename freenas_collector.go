@@ -17,8 +17,8 @@ func getCPUtemps() (out []float64) {
 
 	// IPMI Variables/Settings
 	//useIPMI := true //I want to use IPMI, use what you like
-	ipmiHost := "IPMI ADDRESS"  // IP address or DNS-resolvable hostname of IPMI server:
-	ipmiUser := "IPMI Username" // IPMI username
+	ipmiHost := "192.168.1.64" // IP address or DNS-resolvable hostname of IPMI server:
+	ipmiUser := "root"         // IPMI username
 	// IPMI password file. This is a file containing the IPMI user's password
 	// on a single line and should have 0600 permissions:
 	ipmiPWfromFile, _ := ioutil.ReadFile("/root/ipmi_password") //needs to find the file at location and read the line to the variable
