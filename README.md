@@ -10,3 +10,7 @@ Status: Compiles, I believe with dependencies, but does not run as descriped in 
 
 Credit for much of the work goes to:
 https://rsmitty.github.io/Prometheus-Exporters/, https://www.robustperception.io/setting-a-prometheus-counter/, and looking at the node_xporter of Prometheus, specifically cpu_freebsd
+
+[16:39] <Nikon_NLG[m]> maelos: Don't you check if you have some specific flag for kernel, and you'll have correct temperature for your MB/CPU ?
+
+Renamed this to custom exporter and fixed a few things
