@@ -19,9 +19,10 @@ func main() {
 	// on a single lin and should have 0600 permissions:
 	ipmiPWFile := "/root/ipmi_password" //just the file location
 
-	//define the command to get the number of CPUs and then use it
-	fmt.Println("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmiPWFile, " sdr elist all | grep -c -i \"cpu.*temp\"")
-	numCPUCmd := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmiPWFile, " sdr elist all | grep -c -i \"cpu.*temp\"")
+	//define the command to get the number of CPUs and then use it.  Every , between arguments is a space
+	fmt.Println("/usr/local/bin/ipmitool", "-I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\"")
+	numCPUCmd := exec.Command("/usr/local/bin/ipmitool", "-I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\"")
+	fmt.Println("numCPUCmd", numCPUCmd)
 	numCPUBytes, _ := numCPUCmd.Output() //returns a slice of bytes and an error
 	fmt.Println("numCPUBytes", numCPUBytes)
 	numCPUBits := binary.LittleEndian.Uint64(numCPUBytes)
