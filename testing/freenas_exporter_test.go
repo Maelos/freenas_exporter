@@ -20,12 +20,16 @@ func main() {
 	ipmiPWFile := "/root/ipmi_password" //just the file location
 
 	//define the command to get the number of CPUs and then use it
-	numCPUCmd := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmiPWFile, " sdr elist all | grep -c -i 'cpu.*temp'")
+	fmt.Println("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmiPWFile, " sdr elist all | grep -c -i \"cpu.*temp\"")
+	numCPUCmd := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmiPWFile, " sdr elist all | grep -c -i \"cpu.*temp\"")
 	numCPUBytes, _ := numCPUCmd.Output() //returns a slice of bytes and an error
+	fmt.Println("numCPUBytes", numCPUBytes)
 	numCPUBits := binary.LittleEndian.Uint64(numCPUBytes)
+	fmt.Println("numCPUBits", numCPUBits)
 	numCPUFloat := math.Float64frombits(numCPUBits)
+	fmt.Println("numCPUFloat", numCPUFloat)
 	numCPU := int(numCPUFloat) //converts the first and hopefully only value of slice of bytes into an int
-	fmt.Println(numCPU)
+	fmt.Println("numCPU", numCPU)
 }
 
 /*
