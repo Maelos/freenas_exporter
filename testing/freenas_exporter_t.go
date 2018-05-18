@@ -9,8 +9,6 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-// I am going to keep this here for anyone interested in the work it took to get the []bytes to a float/int
-// See https://groups.google.com/forum/#!topic/golang-nuts/fLI3NXTNvHg for more
 func main() {
 
 	// IPMI Variables/Settings
