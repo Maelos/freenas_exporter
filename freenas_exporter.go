@@ -19,19 +19,27 @@ type cpuCollector struct {
 func getCPUtemps() (out []float64) {
 
 	// IPMI Variables/Settings
+	//useIPMI := true //I want to use IPMI, use what you like
 	ipmiHost := "192.168.1.60" // IP address or DNS-resolvable hostname of IPMI server:
 	ipmiUser := "ADMIN"        // IPMI username
 	// IPMI password file. This is a file containing the IPMI user's password
 	// on a single line and should have 0600 permissions:
 	ipmiPWFile := "/root/ipmi_password" //just the file location
 
-	//define the command to get the number of CPUs and then use it
-	numCPUCmd := exec.Command("/usr/local/bin/ipmitool", "-I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\"")
-	//prints the command path and args as a check
-	fmt.Println("Command Path:", numCPUCmd.Path)
-	fmt.Println("Command Args:", numCPUCmd.Args)
+	numCPUcmdTxt := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\""}
+	fmt.Printf("numCPUcmdTxt is of type: %T\nWith a value of: %v\nAnd a length of: %v\n\n", numCPUcmdTxt, numCPUcmdTxt, len(numCPUcmdTxt))
+	for i, s := range numCPUcmdTxt {
+		fmt.Printf("Value at %v is %v\n", i, s)
+	}
+	fmt.Println()
+	fmt.Println()
 
+	//define the command to get the number of CPUs and then use it
+	numCPUCmd := exec.Command(numCPUcmdTxt[0], numCPUcmdTxt[1:]...)
+
+	//takes the input (returns []byte and error)
 	numCPUBytes, err := numCPUCmd.Output() //returns a slice of bytes and an error
+	fmt.Printf("Slice returned is of type %T and value %v", numCPUBytes, numCPUBytes)
 
 	//error check
 	if err != nil {
@@ -44,17 +52,11 @@ func getCPUtemps() (out []float64) {
 	3. Then it parses an int from the string.  Later I will use the float version for the temperatures.
 	*/
 	numCPU, _ := strconv.Atoi(strings.TrimSpace(string(numCPUBytes)))
-	fmt.Println("The number of CPUs reported by the pull from IPMI:", numCPU) //error checking
 
 	//go through each CPU and get the temperature
 	if numCPU == 1 {
 		//define the command used to get the CPU temperature
-		tempCmd := exec.Command("/usr/local/bin/ipmitool", "-I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep \"CPU Temp\" | awk '{print $10}'")
-
-		//prints the command path and args as a check
-		fmt.Println("Command Path:", tempCmd.Path)
-		fmt.Println("Command Args:", tempCmd.Args)
-
+		//tempCmd := exec.Command("bash","-c","/usr/local/bin/ipmitool -I lanplus -H 192.168.1.60 -U ADMIN -f /root/ipmi_password sdr elist all | grep \"CPU Temp\" | awk '{print $10}'")
 		tempFloat, err := strconv.ParseFloat(strings.TrimSpace(string(numCPUBytes)), 64)
 
 		//error check
@@ -66,7 +68,7 @@ func getCPUtemps() (out []float64) {
 		fmt.Println("Single entry slice of float", out) //error checking
 	} else {
 		for i := 1; i < numCPU+1; i++ {
-			tempCmd := exec.Command("/usr/local/bin/ipmitool", " -I lanplus -H ", ipmiHost, " -U ", ipmiUser, " -f ", ipmiPWFile, " sdr elist all | grep 'CPU", string(i), " Temp' | awk '{print $10}'")
+			tempCmd := exec.Command("bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H 192.168.1.60 -U ADMIN -f /root/ipmi_password sdr elist all | grep 'CPU", string(i), " Temp\" | awk '{print $10}'")
 			//prints the command path and args as a check
 			fmt.Println("Command Path:", tempCmd.Path)
 			fmt.Println("Command Args:", tempCmd.Args)
