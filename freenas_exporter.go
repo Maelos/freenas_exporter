@@ -15,6 +15,10 @@ type cpuCollector struct {
 	temp *prometheus.Desc
 }
 
+func check(err error) {
+	log.Error(err)
+}
+
 //get the # of CPU cores and their temperatures and put them in a cpu struct, then return a slice of these structs
 func getCPUtemps() (out []float64) {
 
@@ -26,13 +30,14 @@ func getCPUtemps() (out []float64) {
 	// on a single line and should have 0600 permissions:
 	ipmiPWFile := "/root/ipmi_password" //just the file location
 
+	//command to get the number of CPUs
 	numCPUcmdTxt := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\""}
-	fmt.Printf("numCPUcmdTxt is of type: %T\nWith a value of: %v\nAnd a length of: %v\n\n", numCPUcmdTxt, numCPUcmdTxt, len(numCPUcmdTxt))
-	for i, s := range numCPUcmdTxt {
-		fmt.Printf("Value at %v is %v\n", i, s)
-	}
-	fmt.Println()
-	fmt.Println()
+
+	//command to get the temperature of a single CPU
+	tempCPUcmdTxt := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep \"CPU Temp\" | awk '{print $10}'"}
+
+	//command to get the temperature of multiple CPUs.  Take careful note of index 9 or [9] as this is what we will be changing to iterate through the CPUs, and later drives (with smartclr)
+	multiTempCPUcmdTxt := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep \"'CPU", "tempString", " Temp\" | awk '{print $10}'"}
 
 	//define the command to get the number of CPUs and then use it
 	numCPUCmd := exec.Command(numCPUcmdTxt[0], numCPUcmdTxt[1:]...)
@@ -41,10 +46,7 @@ func getCPUtemps() (out []float64) {
 	numCPUBytes, err := numCPUCmd.Output() //returns a slice of bytes and an error
 	fmt.Printf("Slice returned is of type %T and value %v", numCPUBytes, numCPUBytes)
 
-	//error check
-	if err != nil {
-		log.Error(err)
-	}
+	check(err) //error check
 
 	/*See the testing/freenas_exporter_t.go for a broken down version
 	1. This converts the []bytes to a string
@@ -56,29 +58,34 @@ func getCPUtemps() (out []float64) {
 	//go through each CPU and get the temperature
 	if numCPU == 1 {
 		//define the command used to get the CPU temperature
-		//tempCmd := exec.Command("bash","-c","/usr/local/bin/ipmitool -I lanplus -H 192.168.1.60 -U ADMIN -f /root/ipmi_password sdr elist all | grep \"CPU Temp\" | awk '{print $10}'")
-		tempFloat, err := strconv.ParseFloat(strings.TrimSpace(string(numCPUBytes)), 64)
+		tempCmd := exec.Command(tempCPUcmdTxt[0], tempCPUcmdTxt[1:]...)
 
-		//error check
-		if err != nil {
-			log.Error(err)
-		}
+		//takes the input (returns []byte and error)
+		tempCPUBytes, err := tempCmd.Output() //returns a slice of bytes and an error
+		fmt.Printf("Slice returned is of type %T and value %v", numCPUBytes, numCPUBytes)
+
+		check(err) //error check
+
+		tempFloat, err := strconv.ParseFloat(strings.TrimSpace(string(tempCPUBytes)), 64)
+
+		check(err) //error check
 
 		out = append(out, tempFloat)
 		fmt.Println("Single entry slice of float", out) //error checking
+
 	} else {
 		for i := 1; i < numCPU+1; i++ {
-			tempCmd := exec.Command("bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H 192.168.1.60 -U ADMIN -f /root/ipmi_password sdr elist all | grep 'CPU", string(i), " Temp\" | awk '{print $10}'")
+			//converts the number of the interation (1-X) to a string and stores it so that # CPU temp is retrieved
+			multiTempCPUcmdTxt[9] = strconv.FormatInt(int64(i), 10) //look back up at multiTempCPUcmdTxt for more, or the testing file
+
+			tempCmd := exec.Command(multiTempCPUcmdTxt[0], multiTempCPUcmdTxt[1:]...)
 			//prints the command path and args as a check
 			fmt.Println("Command Path:", tempCmd.Path)
 			fmt.Println("Command Args:", tempCmd.Args)
 
 			tempFloat, err := strconv.ParseFloat(strings.TrimSpace(string(numCPUBytes)), 64)
 
-			//error check
-			if err != nil {
-				log.Error(err)
-			}
+			check(err) //error check
 
 			out = append(out, tempFloat)
 			fmt.Println("Slice of float 64s:", out) //error checking

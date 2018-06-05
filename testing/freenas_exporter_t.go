@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 )
 
 //for using external processes - IPMI and smartctl calls
@@ -14,7 +15,7 @@ func main() {
 	ipmiHost := "192.168.1.60" // IP address or DNS-resolvable hostname of IPMI server:
 	ipmiUser := "ADMIN"        // IPMI username
 	// IPMI password file. This is a file containing the IPMI user's password
-	// on a single lin and should have 0600 permissions:
+	// on a single line and should have 0600 permissions:
 	ipmiPWFile := "/root/ipmi_password" //just the file location
 
 	commandText := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\""}
@@ -28,6 +29,18 @@ func main() {
 
 	fmt.Println("Path:", numCPUCmd.Path)
 	fmt.Println("Args:", numCPUCmd.Args)
+
+	//command to get the temperature of multiple CPUs.  Take careful note of index 9 or [9] as this is what we will be changing to iterate through the CPUs, and later drives (with smartclr)
+	multiTempCPUcmdTxt := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep \"'CPU", "tempString", " Temp\" | awk '{print $10}'"}
+	for n, s := range multiTempCPUcmdTxt {
+		fmt.Println("Value at [", n, "] is ", s)
+	}
+
+	multiTempCPUcmdTxt[9] = strconv.FormatInt(9000, 10)
+
+	for n, s := range multiTempCPUcmdTxt {
+		fmt.Println("Value at [", n, "] is ", s)
+	}
 	/*
 		//define the command to get the number of CPUs and then use it.  Every , between arguments is a space
 		fmt.Println("Command Args:", "/usr/local/bin/ipmitool", "-I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\"")
