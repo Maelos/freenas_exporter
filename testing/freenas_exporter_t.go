@@ -21,7 +21,7 @@ func main() {
 	commandText := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep -c -i \"cpu.*temp\""}
 	fmt.Printf("commandText is of type: %T\nWith a value of: %v\nAnd a length of: %v\n\n", commandText, commandText, len(commandText))
 	for i, s := range commandText {
-		fmt.Println("Value at [", i, "] is ", s)
+		fmt.Printf("Value at %v is %v\n\n", i, s)
 	}
 
 	//define the command to get the number of CPUs and then use it
@@ -33,13 +33,13 @@ func main() {
 	//command to get the temperature of multiple CPUs.  Take careful note of index 9 or [9] as this is what we will be changing to iterate through the CPUs, and later drives (with smartclr)
 	multiTempCPUcmdTxt := []string{"bash", "-c", "/usr/local/bin/ipmitool -I lanplus -H", ipmiHost, "-U", ipmiUser, "-f", ipmiPWFile, "sdr elist all | grep \"'CPU", "tempString", " Temp\" | awk '{print $10}'"}
 	for n, s := range multiTempCPUcmdTxt {
-		fmt.Println("Value at [", n, "] is ", s)
+		fmt.Printf("Value at %v is %v\n\n", n, s)
 	}
 
 	multiTempCPUcmdTxt[9] = strconv.FormatInt(9000, 10)
 
 	for n, s := range multiTempCPUcmdTxt {
-		fmt.Println("Value at [", n, "] is ", s)
+		fmt.Printf("Value at %v is %v\n\n", n, s)
 	}
 	/*
 		//define the command to get the number of CPUs and then use it.  Every , between arguments is a space

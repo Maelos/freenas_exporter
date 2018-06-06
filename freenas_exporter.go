@@ -16,7 +16,9 @@ type cpuCollector struct {
 }
 
 func check(err error) {
-	log.Error(err)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 //get the # of CPU cores and their temperatures and put them in a cpu struct, then return a slice of these structs
@@ -44,7 +46,7 @@ func getCPUtemps() (out []float64) {
 
 	//takes the input (returns []byte and error)
 	numCPUBytes, err := numCPUCmd.Output() //returns a slice of bytes and an error
-	fmt.Printf("Slice returned is of type %T and value %v", numCPUBytes, numCPUBytes)
+	fmt.Printf("1. Slice returned is of type %T and value %v\n", numCPUBytes, numCPUBytes)
 
 	check(err) //error check
 
@@ -62,7 +64,7 @@ func getCPUtemps() (out []float64) {
 
 		//takes the input (returns []byte and error)
 		tempCPUBytes, err := tempCmd.Output() //returns a slice of bytes and an error
-		fmt.Printf("Slice returned is of type %T and value %v", numCPUBytes, numCPUBytes)
+		fmt.Printf("2. Slice returned is of type %T and value %v\n", numCPUBytes, numCPUBytes)
 
 		check(err) //error check
 
@@ -71,28 +73,29 @@ func getCPUtemps() (out []float64) {
 		check(err) //error check
 
 		out = append(out, tempFloat)
-		fmt.Println("Single entry slice of float", out) //error checking
+		fmt.Println("3. Single entry slice of float", out) //error checking
 
 	} else {
 		for i := 1; i < numCPU+1; i++ {
 			//converts the number of the interation (1-X) to a string and stores it so that # CPU temp is retrieved
-			multiTempCPUcmdTxt[9] = strconv.FormatInt(int64(i), 10) //look back up at multiTempCPUcmdTxt for more, or the testing file
+			//Itoa is shorthand for FormatInt(int64(i), 10).  Look at the decleration or test file for more
+			multiTempCPUcmdTxt[9] = strconv.Itoa(i)
 
 			tempCmd := exec.Command(multiTempCPUcmdTxt[0], multiTempCPUcmdTxt[1:]...)
 			//prints the command path and args as a check
-			fmt.Println("Command Path:", tempCmd.Path)
-			fmt.Println("Command Args:", tempCmd.Args)
+			fmt.Println("4. Command Path:", tempCmd.Path)
+			fmt.Println("5. Command Args:", tempCmd.Args)
 
 			tempFloat, err := strconv.ParseFloat(strings.TrimSpace(string(numCPUBytes)), 64)
 
 			check(err) //error check
 
 			out = append(out, tempFloat)
-			fmt.Println("Slice of float 64s:", out) //error checking
+			fmt.Println("6. Slice of float 64s:", out) //error checking
 		}
 	}
-	fmt.Println("Final slice being returned:", out) //error checking
-	return out                                      // returns the slice of float64s
+	fmt.Println("7. Final slice being returned:", out) //error checking
+	return out                                         // returns the slice of float64s
 }
 
 //You must create a constructor for you collector that
