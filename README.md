@@ -1,5 +1,8 @@
 # FreeNAS Custom Exporter
 
+6/7/18 - As of now I have the first part of the command working, but I don't think the piping works within the exec.Command() creation.  Judging from the example on gobyexample.com for exec'ing processes, I may need to use the command's standard out, in, and error to manipulate the data appropriately.  It may also be wise to use something besides grep and awk which I am sure are available within Go's standard libraries.  At this point I feel like I have forgotten part of the class I took and or just need to invest in a book and relearn a bit, specifically on the reader and reader implementing packages.
+
+
 I am trying to create a custom exporter for use in FreeNAS as the node_exporter does not send the correct CPU temperature (currently).  You may find my troubleshooting in these, and a few other, links:
 https://groups.google.com/forum/#!topic/prometheus-users/MjA77maIz5o
 https://github.com/prometheus/node_exporter/issues/945
