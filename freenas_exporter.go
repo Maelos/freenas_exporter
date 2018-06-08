@@ -33,14 +33,14 @@ func getCPUtemps() (out []float64) {
 	ipmiPWFile := "/root/ipmi_password" //just the file location
 
 	//Would like to get this working with Golang standard libraries but want to try to just get it to work for now
-	cmdTxt := fmt.Sprintf("/usr/local/bin/ipmitool -I lanplus -H %s -U %s -f %s sdr elist all | grep -c i \"cpu.*temp\"", ipmiHost, ipmiUser, ipmiPWFile)
+	cmdTxt := fmt.Sprintf("/usr/local/bin/ipmitool -I lanplus -H %s -U %s -f %s sdr elist all | grep -c -i \"cpu.*temp\"", ipmiHost, ipmiUser, ipmiPWFile)
 
 	//command to get the number of CPUs
 	ipmiCmd := exec.Command("bash", "-c", cmdTxt)
 	ipmiOutput, err := ipmiCmd.Output()
 	check(err)
 
-	numCPU, err := strconv.Atoi(string(ipmiOutput))
+	numCPU, err := strconv.Atoi(strings.TrimSpace(string(ipmiOutput)))
 	check(err)
 	/*I want to get this working using Go and not relying on the grep and awk commands, but for now I will do it the ugly way
 	numRegexp := regexp.Compile("(?i)cpu.*temp") //define the regular expression to use the full suite of tools
@@ -66,7 +66,7 @@ func getCPUtemps() (out []float64) {
 	} else {
 		for i := 1; i < numCPU+1; i++ {
 			//multi cpu command, though gonna have to make this work with the look
-			multiCPUcmdTxt := fmt.Sprintf("/usr/local/bin/ipmitool -I lanplus -H %s -U %s -f %s sdr elist all | grep \"'CPU%s Temp\" | awk '{print $10}'", ipmiHost, ipmiUser, ipmiPWFile, strconv.Itoa(i))
+			multiCPUcmdTxt := fmt.Sprintf("/usr/local/bin/ipmitool -I lanplus -H %s -U %s -f %s sdr elist all | grep \"CPU%s Temp\" | awk '{print $10}'", ipmiHost, ipmiUser, ipmiPWFile, strconv.Itoa(i))
 			multiCPUcmd := exec.Command("bash", "-c", multiCPUcmdTxt)
 			multiCPUbytes, err := multiCPUcmd.Output()
 			check(err)
@@ -109,7 +109,9 @@ func (collector *cpuCollector) Collect(ch chan<- prometheus.Metric) {
 	//gathers the slice of cpuCollector structs, each with a temp *prometheus.Desc
 	cpuTemps := getCPUtemps()
 
-	for num, temp := range cpuTemps {
-		ch <- prometheus.MustNewConstMetric(collector.temp, prometheus.GaugeValue, temp, string(num))
+	//by taking out the last bit of the string I am now getting a working program, or at least it is pulling the temperatures correctly
+	//I now need to figure out how to get Prometheus working.  I think this is progress...?
+	for _, temp := range cpuTemps {
+		ch <- prometheus.MustNewConstMetric(collector.temp, prometheus.GaugeValue, temp) //, strconv.Itoa(num + 1))
 	}
 }
