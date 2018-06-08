@@ -1,5 +1,7 @@
 # FreeNAS Custom Exporter
 
+6/8/18 - I got some really helpful feedback here https://groups.google.com/forum/#!topic/golang-nuts/0o7jMAXPBiE and am incorporating that now.  I also am reducing the test file greatly, but the past testing should be in the file history so it is not lost.
+
 6/7/18 - As of now I have the first part of the command working, but I don't think the piping works within the exec.Command() creation.  Judging from the example on gobyexample.com for exec'ing processes, I may need to use the command's standard out, in, and error to manipulate the data appropriately.  It may also be wise to use something besides grep and awk which I am sure are available within Go's standard libraries.  At this point I feel like I have forgotten part of the class I took and or just need to invest in a book and relearn a bit, specifically on the reader and reader implementing packages.
 
 
