@@ -88,7 +88,7 @@ func newCPUCollector() *cpuCollector {
 	return &cpuCollector{
 		temp: prometheus.NewDesc("cpu_temp_celcius",
 			"Displays the current CPU temperatures in Celcius",
-			nil, nil,
+			[]string{"cpu"}, nil,
 		),
 	}
 }
@@ -106,12 +106,13 @@ func (collector *cpuCollector) Collect(ch chan<- prometheus.Metric) {
 	//Implement logic here to determine proper metric value to return to prometheus
 	//for each descriptor or call other functions that do so.
 
-	//gathers the slice of cpuCollector structs, each with a temp *prometheus.Desc
+	//gathers the slice of cpuCollector structs, each with a temp *Sprometheus.Desc
 	cpuTemps := getCPUtemps()
 
 	//by taking out the last bit of the string I am now getting a working program, or at least it is pulling the temperatures correctly
 	//I now need to figure out how to get Prometheus working.  I think this is progress...?
-	for _, temp := range cpuTemps {
-		ch <- prometheus.MustNewConstMetric(collector.temp, prometheus.GaugeValue, temp) //, strconv.Itoa(num + 1))
+	for num, temp := range cpuTemps {
+		numS := strconv.Itoa(num)
+		ch <- prometheus.MustNewConstMetric(collector.temp, prometheus.GaugeValue, temp, numS)
 	}
 }
