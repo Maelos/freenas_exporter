@@ -1,4 +1,6 @@
 # FreeNAS Custom Exporter
+8/1/18 - I got it working!
+The script, however basic, now reports the temperatures of the CPUs.  It does this by pulling from IPMI.  While this has already been done to better effect in the IPMI exporter, this was a learning challenge for me and a start to a custom FreeNAS exporter which I hope to build up and modify to the request of the community.  As a VM with HBA passed through to it, FreeNAS is, in my admittedly inexperienced belief, the best place to put and build a custom exporter for both the system and drive temps, and later more.
 
 6/8/18 - I got some really helpful feedback here https://groups.google.com/forum/#!topic/golang-nuts/0o7jMAXPBiE and am incorporating that now.  I also am reducing the test file greatly, but the past testing should be in the file history so it is not lost.
 
